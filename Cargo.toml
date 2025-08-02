@@ -2,41 +2,37 @@
 name = "hf-hub"
 version = "0.4.3"
 edition = "2021"
-homepage = "https://github.com/huggingface/hf-hub"
+homepage = "https://github.com/neopilotai/hf-hub"
 license = "Apache-2.0"
 documentation = "https://docs.rs/hf-hub"
-repository = "https://github.com/huggingface/hf-hub"
+repository = "https://github.com/neopilotai/hf-hub"
 readme = "README.md"
 keywords = ["huggingface", "hf", "hub", "machine-learning"]
+categories = ["api-bindings", "machine-learning", "network-programming"]
 description = """
-This crates aims ease the interaction with [huggingface](https://huggingface.co/) 
-It aims to be compatible with [huggingface_hub](https://github.com/huggingface/huggingface_hub/) python package, but only implements a smaller subset of functions.
+This crate aims to ease interaction with [Hugging Face](https://huggingface.co/).
+It is compatible with a subset of the [huggingface_hub](https://github.com/huggingface/huggingface_hub/) Python package.
 """
-
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-futures = { version = "0.3.28", optional = true }
 dirs = "6"
+log = "0.4.19"
+futures = { version = "0.3.28", optional = true }
 http = { version = "1.0.0", optional = true }
 indicatif = { version = "0.17.5", optional = true }
-log = "0.4.19"
 num_cpus = { version = "1.15.0", optional = true }
 rand = { version = "0.9", optional = true }
-reqwest = { version = "0.12.2", optional = true, default-features = false, features = [
-  "json",
-  "stream",
-] }
+reqwest = { version = "0.12.2", optional = true, default-features = false, features = ["json", "stream"] }
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
 thiserror = { version = "2", optional = true }
 tokio = { version = "1.29.1", optional = true, features = ["fs", "macros"] }
-ureq = { version = "3", optional = true, features = [
-  "json",
-  "socks-proxy",
-] }
+ureq = { version = "3", optional = true, features = ["json", "socks-proxy"] }
 native-tls = { version = "0.2.12", optional = true }
+# If vendored OpenSSL is preferred by default, use:
+# native-tls = { version = "0.2.12", optional = true, features = ["vendored"] }
 
 [target.'cfg(windows)'.dependencies.windows-sys]
 version = "0.60"
@@ -49,10 +45,24 @@ optional = true
 
 [features]
 default = ["default-tls", "tokio", "ureq"]
-# These features are only relevant when used with the `tokio` feature, but this might change in the future.
+
+# Enable native TLS with system libraries (default) or vendored (see below).
 default-tls = ["native-tls"]
-native-tls = ["dep:reqwest", "reqwest?/default", "dep:native-tls", "dep:ureq", "ureq?/native-tls"]
+
+# Use vendored OpenSSL for native-tls in both reqwest and ureq
+native-tls = [
+  "dep:reqwest",
+  "reqwest?/native-tls-vendored",
+  "dep:native-tls",
+  "dep:ureq",
+  "ureq?/native-tls",
+  "ureq?/vendored"
+]
+
+# Use reqwest/ureq with rustls for TLS instead of native-tls
 rustls-tls = ["reqwest?/rustls-tls"]
+
+# Enable full async/await stack and extended features
 tokio = [
   "dep:futures",
   "dep:indicatif",
@@ -70,6 +80,8 @@ tokio = [
   "dep:libc",
   "dep:windows-sys",
 ]
+
+# Enable minimal sync HTTP stack
 ureq = [
   "dep:http",
   "dep:indicatif",
@@ -81,6 +93,9 @@ ureq = [
   "dep:libc",
   "dep:windows-sys",
 ]
+
+# Convenience feature for full functionality (optional)
+full = ["tokio", "ureq", "native-tls", "rustls-tls"]
 
 [dev-dependencies]
 hex-literal = "1.0"
