@@ -33,7 +33,7 @@ serde_json = { version = "1", optional = true }
 thiserror = { version = "2", optional = true }
 tokio = { version = "1.29.1", optional = true, features = ["fs", "macros"] }
 ureq = { version = "3", optional = true, features = ["json", "socks-proxy"] }
-native-tls = { version = "0.2.12", optional = true }
+native-tls = { version = "0.2.12", optional = true, features = ["vendored"] }
 # If vendored OpenSSL is preferred by default, use:
 # native-tls = { version = "0.2.12", optional = true, features = ["vendored"] }
 
@@ -53,7 +53,7 @@ default = ["default-tls", "tokio"]
 default-tls = ["native-tls"]
 
 # Use vendored OpenSSL for native-tls in both reqwest and ureq
-native-tls = ["dep:reqwest", "reqwest?/native-tls-vendored", "dep:native-tls", "dep:ureq", "ureq?/native-tls"]
+native-tls = ["dep:reqwest", "reqwest?/native-tls-vendored", "dep:native-tls", "dep:ureq", "ureq?/native-tls", "ureq?/vendored"]
 
 # Use reqwest/ureq with rustls for TLS instead of native-tls
 rustls-tls = ["reqwest?/rustls-tls"]
