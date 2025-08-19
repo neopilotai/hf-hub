@@ -36,7 +36,7 @@ struct Wrapper<'a, P: Progress, R: Read> {
     inner: R,
 }
 
-fn wrap_read<P: Progress, R: Read>(inner: R, progress: &mut P) -> Wrapper<P, R> {
+fn wrap_read<P: Progress, R: Read>(inner: R, progress: &mut P) -> Wrapper<'_, P, R> {
     Wrapper { inner, progress }
 }
 
@@ -537,7 +537,7 @@ impl Api {
 
         let size = content_range
             .split('/')
-            .last()
+            .next_back()
             .ok_or(ApiError::InvalidHeader(CONTENT_RANGE))?
             .parse()?;
         Ok(Metadata {
