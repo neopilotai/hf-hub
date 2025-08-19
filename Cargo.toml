@@ -27,7 +27,6 @@ rand = { version = "0.9", optional = true }
 reqwest = { version = "0.12.2", optional = true, default-features = false, features = [
   "json",
   "stream",
-  "native-tls-vendored",
 ] }
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
@@ -48,20 +47,13 @@ version = "0.2"
 optional = true
 
 [features]
-default = ["default-tls", "tokio", "ureq"]
+default = ["default-tls", "tokio", "reqwest"]
 
 # Enable native TLS with system libraries (default) or vendored (see below).
 default-tls = ["native-tls"]
 
 # Use vendored OpenSSL for native-tls in both reqwest and ureq
-native-tls = [
-  "dep:reqwest",
-  "reqwest?/native-tls-vendored",
-  "dep:native-tls",
-  "dep:ureq",
-  "ureq?/native-tls",
-  "ureq?/vendored"
-]
+native-tls = ["dep:reqwest", "reqwest?/native-tls-vendored", "dep:native-tls", "dep:ureq", "ureq?/native-tls"]
 
 # Use reqwest/ureq with rustls for TLS instead of native-tls
 rustls-tls = ["reqwest?/rustls-tls"]
