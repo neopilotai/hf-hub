@@ -989,8 +989,6 @@ mod tests {
 
     #[tokio::test]
     async fn locking() {
-        use std::sync::Arc;
-        use tokio::sync::Mutex;
         use tokio::task::JoinSet;
         let mut handles = JoinSet::new();
         let mut temp_dirs = Vec::new(); // Collect TempDir instances
