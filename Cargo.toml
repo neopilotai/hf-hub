@@ -47,7 +47,7 @@ version = "0.2"
 optional = true
 
 [features]
-default = ["default-tls", "tokio", "reqwest"]
+default = ["default-tls", "tokio"]
 
 # Enable native TLS with system libraries (default) or vendored (see below).
 default-tls = ["native-tls"]
