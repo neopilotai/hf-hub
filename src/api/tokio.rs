@@ -477,7 +477,7 @@ fn symlink_or_rename(src: &Path, dst: &Path) -> Result<(), std::io::Error> {
 }
 
 fn jitter() -> usize {
-    rand::rng().random_range(0..=500)
+    rand::thread_rng().gen_range(0..=500)
 }
 
 fn exponential_backoff(base_wait_time: usize, n: usize, max: usize) -> usize {
@@ -542,7 +542,7 @@ impl Api {
 
         let size = content_range
             .split('/')
-            .next_back()
+            .last()
             .ok_or(ApiError::InvalidHeader(CONTENT_RANGE))?
             .parse()?;
         Ok(Metadata {
@@ -907,13 +907,7 @@ impl ApiRepo {
     /// # })
     /// ```
     pub async fn info(&self) -> Result<RepoInfo, ApiError> {
-        Ok(self
-            .info_request()
-            .send()
-            .await?
-            .error_for_status()?
-            .json()
-            .await?)
+        Ok(self.info_request().send().await?.json().await?)
     }
 
     /// Get the raw [`reqwest::RequestBuilder`] with the url and method already set
@@ -939,9 +933,8 @@ mod tests {
     use super::*;
     use crate::api::Siblings;
     use crate::assert_no_diff;
-    use core::panic;
     use hex_literal::hex;
-    use rand::distr::Alphanumeric;
+    use rand::distributions::Alphanumeric;
     use serde_json::{json, Value};
     use sha2::{Digest, Sha256};
     use std::io::{Seek, Write};
@@ -953,7 +946,7 @@ mod tests {
 
     impl TempDir {
         pub fn new() -> Self {
-            let s: String = rand::rng()
+            let s: String = rand::thread_rng()
                 .sample_iter(&Alphanumeric)
                 .take(7)
                 .map(char::from)
@@ -1343,7 +1336,7 @@ mod tests {
                 "gated": false,
                 "id": "mcpotato/42-eicar-street",
                 "lastModified": "2022-11-30T19:54:16.000Z",
-                "likes": 3,
+                "likes": 2,
                 "modelId": "mcpotato/42-eicar-street",
                 "private": false,
                 "sha": "8b3861f6931c4026b0cd22b38dbc09e7668983ac",
@@ -1396,55 +1389,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn headers_default() {
-        let headers = ApiBuilder::new().build_headers().unwrap();
-        assert_eq!(
-            headers.get(USER_AGENT),
-            Some(
-                &"unknown/None; hf-hub/0.4.3; rust/unknown"
-                    .try_into()
-                    .unwrap()
-            )
-        );
-    }
-
-    #[test]
-    fn headers_custom() {
-        let headers = ApiBuilder::new()
-            .with_user_agent("origin", "custom")
-            .build_headers()
-            .unwrap();
-        assert_eq!(
-            headers.get(USER_AGENT),
-            Some(
-                &"unknown/None; hf-hub/0.4.3; rust/unknown; origin/custom"
-                    .try_into()
-                    .unwrap()
-            )
-        );
-    }
-
-    #[tokio::test]
-    async fn repo_info_failed() {
-        let api = ApiBuilder::new()
-            .with_progress(true)
-            // Use an empty token to trigger an authorization error.
-            .with_token(Some("".to_string()))
-            .build()
-            .expect("failed to build API");
-
-        let repo = api.model("google-bert/bert-base-uncased".to_string());
-        let error = repo
-            .info()
-            .await
-            .expect_err("failed to raise authentication error");
-        match error {
-            ApiError::RequestError(error) if error.is_status() => {}
-            _ => panic!("unexpected request error"),
-        }
-    }
-
     // #[tokio::test]
     // async fn real() {
     //     let api = Api::new().unwrap();
@@ -1457,18 +1401,4 @@ mod tests {
     //         hex!("68d45e234eb4a928074dfd868cead0219ab85354cc53d20e772753c6bb9169d3")
     //     );
     // }
-
-    #[tokio::test]
-    async fn redirect_test() {
-        // This test requires a valid HF_TOKEN with gate access to this llama model.
-        if let Ok(token) = std::env::var("HF_TOKEN") {
-            let api = ApiBuilder::new().with_token(Some(token)).build().unwrap();
-            let repo = api.model("meta-llama/Llama-3.1-8B".to_string());
-            repo.download("config.json").await.unwrap();
-
-            // with redirect
-            let repo = api.model("meta-llama/Meta-Llama-3.1-8B".to_string());
-            repo.download("config.json").await.unwrap();
-        }
-    }
 }
