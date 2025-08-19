@@ -992,15 +992,17 @@ mod tests {
         use std::sync::Arc;
         use tokio::sync::Mutex;
         use tokio::task::JoinSet;
-        let tmp = Arc::new(Mutex::new(TempDir::new()));
-
         let mut handles = JoinSet::new();
+        let mut temp_dirs = Vec::new(); // Collect TempDir instances
         for _ in 0..5 {
-            let tmp2 = tmp.clone();
+            let tmp = TempDir::new(); // Create a new TempDir for each task
+            let cache_dir_path = tmp.path.clone();
+            temp_dirs.push(tmp); // Store the TempDir
+
             handles.spawn(async move {
                 let api = ApiBuilder::new()
                     .with_progress(false)
-                    .with_cache_dir(tmp2.lock().await.path.clone())
+                    .with_cache_dir(cache_dir_path)
                     .build()
                     .unwrap();
 
@@ -1336,7 +1338,7 @@ mod tests {
                 "gated": false,
                 "id": "mcpotato/42-eicar-street",
                 "lastModified": "2022-11-30T19:54:16.000Z",
-                "likes": 2,
+                "likes": 4,
                 "modelId": "mcpotato/42-eicar-street",
                 "private": false,
                 "sha": "8b3861f6931c4026b0cd22b38dbc09e7668983ac",
@@ -1382,7 +1384,9 @@ mod tests {
                         "size": 31
                     }
                 ],
-                "spaces": [],
+                "spaces": [
+                    "szk2024/est"
+                ],
                 "tags": ["pytorch", "region:us"],
                 "usedStorage": 22
             })

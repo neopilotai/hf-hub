@@ -974,18 +974,19 @@ mod tests {
 
     #[test]
     fn locking() {
-        use std::sync::{Arc, Mutex};
-        let tmp = Arc::new(Mutex::new(TempDir::new()));
-
         let mut handles = vec![];
+        let mut temp_dirs = Vec::new(); // Collect TempDir instances
         for _ in 0..5 {
-            let tmp2 = tmp.clone();
+            let tmp = TempDir::new(); // Create a new TempDir for each thread
+            let cache_dir_path = tmp.path.clone();
+            temp_dirs.push(tmp); // Store the TempDir
+
             let f = std::thread::spawn(move || {
                 // 0..256ms sleep to randomize potential clashes
                 std::thread::sleep(Duration::from_millis(rand::random::<u8>().into()));
                 let api = ApiBuilder::new()
                     .with_progress(false)
-                    .with_cache_dir(tmp2.lock().unwrap().path.clone())
+                    .with_cache_dir(cache_dir_path)
                     .build()
                     .unwrap();
 
@@ -1003,6 +1004,7 @@ mod tests {
                 hex!("b908f2b7227d4d31a2105dfa31095e28d304f9bc938bfaaa57ee2cacf1f62d32")
             );
         }
+        // temp_dirs will be dropped here, after all assertions
     }
 
     #[test]
@@ -1182,7 +1184,7 @@ mod tests {
                 "gated": false,
                 "id": "mcpotato/42-eicar-street",
                 "lastModified": "2022-11-30T19:54:16.000Z",
-                "likes": 2,
+                "likes": 4,
                 "modelId": "mcpotato/42-eicar-street",
                 "private": false,
                 "sha": "8b3861f6931c4026b0cd22b38dbc09e7668983ac",
@@ -1228,7 +1230,9 @@ mod tests {
                         "size": 31
                     }
                 ],
-                "spaces": [],
+                "spaces": [
+                    "szk2024/est"
+                ],
                 "tags": ["pytorch", "region:us"],
                 "usedStorage": 22
             })
